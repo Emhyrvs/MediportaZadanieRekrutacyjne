@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  # Definiujemy serwis SQL Servera
+  sql_server:
+    # Używamy oficjalnego obrazu SQL Servera z Docker Hub
+    image: mcr.microsoft.com/mssql/server
+    # Zmienne środowiskowe, które akceptują umowę licencyjną i ustawiają hasło SA
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_TLS_CERTIFICATE: "0"
+      SA_PASSWORD: Admin_123
+    # Mapujemy port 1433 kontenera na port 1433 hosta, aby można było łączyć się z serwerem SQL Server
+    ports:
+      - "1433:1433"
+    # Nadajemy kontenerowi nazwę "sql_server_container"
+    container_name: sql_server_container
