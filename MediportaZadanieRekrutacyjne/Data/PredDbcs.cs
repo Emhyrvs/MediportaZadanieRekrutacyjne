@@ -15,43 +15,23 @@ namespace PlatformService.Data
 {
     public static class PrepDbcs
     {
-        public static async Task PrepPopulation(IApplicationBuilder app, bool isProd)
+        public static async Task PrepPopulation(IApplicationBuilder app)
         {
             using (var serviceScope = app.ApplicationServices.CreateScope())
             {
                 var mapper = serviceScope.ServiceProvider.GetRequiredService<IMapper>();
 
-                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), isProd, serviceScope.ServiceProvider.GetRequiredService<IStackExchangeService>(),mapper);
+                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), serviceScope.ServiceProvider.GetRequiredService<ITagRepo>(),mapper);
             }
         }
 
-        private static async Task SeedData(DataDbContext context, bool isProd, IStackExchangeService stackExchangeService,IMapper mapper)
+        private static async Task SeedData(DataDbContext context,ITagRepo tagRepo,IMapper mapper)
         {
-            if (isProd)
-            {
-                Console.WriteLine("--> Attempting to apply migrations...");
-                try
-                {
-                    await context.Database.MigrateAsync();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"--> Could not run migrations: {ex.Message}");
-                }
-            }
 
-            if (!context.Tags.Any())
+            if (context.Tags.Count() < 1000)
             {
-                Console.WriteLine("--> Seeding Data...");
-                do
-                {
-                    List<TagItemDto> tagsDto = await stackExchangeService.GetAllTagsAsync();
-                    List<TagItem> tags = tagsDto.Select(tagDto => mapper.Map<TagItem>(tagDto)).ToList();
 
-                   
-                    context.Tags.AddRange(tags);
-                    await context.SaveChangesAsync();
-                } while (context.Tags.Count() < 1000);
+                await tagRepo.GetTagsFromService();
             }
             else
             {

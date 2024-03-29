@@ -1,4 +1,5 @@
-﻿using MediportaZadanieRekrutacyjne.Models;
+﻿using MediportaZadanieRekrutacyjne.Data;
+using MediportaZadanieRekrutacyjne.Models;
 using MediPortaZadanieTestowe.Models;
 using MediPortaZadanieTestowe.Services;
 using Microsoft.AspNetCore.Http;
@@ -14,31 +15,29 @@ namespace MediPortaZadanieTestowe.Controllers
     {
 
         private readonly IStackExchangeService _stackExchangeService;
-        private readonly DbContext _dbContext;
+        private readonly ITagRepo _tagRepo;
 
 
-        public TagsController(IStackExchangeService stackExchangeService,DbContext dbContext)
+        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo)
         {
             _stackExchangeService = stackExchangeService;
-            _dbContext = dbContext;
+           
+            _tagRepo = tagRepo;
+            
         }
-        [HttpGet]
-        public async Task<ActionResult<List<TagItemDto>>> GetTagsFromApi()
+      
+
+        [HttpGet] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
+        public async Task<ActionResult<List<TagItem>>> GetTagsFromDatabase(
+           [FromQuery] int pageNumber = 1,
+           [FromQuery] int pageSize = 10,
+           [FromQuery] string sortBy = "name",
+           [FromQuery] string sortOrder = "asc")
         {
 
-            var Tags = await _stackExchangeService.GetAllTagsAsync();
-
-
-
-            return Tags;
-
-        }
-
-        [HttpGet("from-database")] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
-        public async Task<ActionResult<List<TagItem>>> GetTagsFromDatabase()
-        {
-            // Pobierz listę tagów z bazy danych
-            var tagsFromDatabase = await _dbContext.Set<TagItem>().ToListAsync();
+            await _tagRepo.UpdateCount();
+            // Pobierz listę tagów z bazy danych z uwzględnieniem stronicowania i sortowania
+            var tagsFromDatabase = await _tagRepo.GetTagsAsync(pageNumber, pageSize, sortBy, sortOrder);
 
             // Jeśli nie ma tagów w bazie danych, zwróć 404 Not Found
             if (tagsFromDatabase == null || tagsFromDatabase.Count == 0)
@@ -48,6 +47,18 @@ namespace MediPortaZadanieTestowe.Controllers
 
             // Jeśli tagi zostały znalezione, zwróć je jako wynik żądania
             return Ok(tagsFromDatabase);
+        }
+
+        [HttpGet("DownloadTags")] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
+        public async Task<ActionResult> DoTags()
+        {
+            // Pobierz listę tagów z bazy danych
+            await _tagRepo.GetTagsFromService();
+
+
+
+            // Jeśli tagi zostały znalezione, zwróć je jako wynik żądania
+            return Ok();
         }
 
 

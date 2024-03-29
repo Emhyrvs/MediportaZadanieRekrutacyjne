@@ -7,6 +7,6 @@ namespace MediPortaZadanieTestowe.Services
     public interface IStackExchangeService
     {
        
-        Task<List<TagItemDto>> GetAllTagsAsync();
+        Task<List<TagItem>> GetAllTagsAsync(int page, int Pagesize);
     }
 }

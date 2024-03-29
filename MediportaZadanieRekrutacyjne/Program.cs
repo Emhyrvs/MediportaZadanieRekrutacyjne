@@ -16,7 +16,7 @@ builder.Services.AddScoped<IStackExchangeService, StackExchangeService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<DataDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddScoped<ITagRepo, TagRepo>();    
 
 var app = builder.Build();
 
@@ -33,5 +33,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-await PrepDbcs.PrepPopulation(app, app.Environment.IsProduction());
+await PrepDbcs.PrepPopulation(app);
 app.Run();

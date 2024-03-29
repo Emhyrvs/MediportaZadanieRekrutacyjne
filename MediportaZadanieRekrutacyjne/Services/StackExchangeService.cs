@@ -1,4 +1,5 @@
-﻿using MediportaZadanieRekrutacyjne.Models;
+﻿using AutoMapper;
+using MediportaZadanieRekrutacyjne.Models;
 using MediPortaZadanieTestowe.Models;
 using MediPortaZadanieTestowe.Services;
 using Newtonsoft.Json;
@@ -7,21 +8,25 @@ using System.IO.Compression;
 public class StackExchangeService:IStackExchangeService
 {
     private readonly HttpClient _client;
+    private readonly IMapper _mapper;
 
-    public StackExchangeService()
+    public StackExchangeService(IMapper mapper)
     {
         _client = new HttpClient();
         _client.BaseAddress = new Uri("https://api.stackexchange.com");
+        _mapper = mapper;
     }
 
-    public async Task<List<TagItemDto>> GetAllTagsAsync()
+    public async Task<List<TagItem>> GetAllTagsAsync(int page, int pageSize)
     {
         
 
         try
         {
+            string apiUrl = $"https://api.stackexchange.com/2.3/tags?page={page}&pagesize={pageSize}&order=desc&sort=popular&site=stackoverflow";
+
             // Wykonanie zapytania GET do API Stack Exchange
-            HttpResponseMessage response = await _client.GetAsync("https://api.stackexchange.com/2.3/tags?pagesize=10&order=desc&sort=popular&site=stackoverflow");
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
 
             // Sprawdzenie, czy odpowiedź jest poprawna
             if (response.IsSuccessStatusCode)
@@ -40,7 +45,7 @@ public class StackExchangeService:IStackExchangeService
 
                         // Pobranie nazw tagów z obiektu TagResponse
 
-                        return tags.Items;
+                        return GetTagsFormTagsDto(tags.Items);
 
                     }
                 }
@@ -68,5 +73,18 @@ public class StackExchangeService:IStackExchangeService
 
         return null;
     }
+
+    private List<TagItem> GetTagsFormTagsDto(List<TagItemDto> tagItemDtos)
+
+    {
+        List<TagItem> tags = tagItemDtos.Select(tagDto => _mapper.Map<TagItem>(tagDto)).ToList();
+
+        //List<TagItem> tags2 = tags.Select(tag => tag.PoleCount = tag.Count *)
+
+        return tags;
+    }
+
+
+    
 }
 
