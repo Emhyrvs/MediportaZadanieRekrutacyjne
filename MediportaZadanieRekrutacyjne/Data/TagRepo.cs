@@ -48,8 +48,8 @@ namespace MediportaZadanieRekrutacyjne.Data
 
             if (_context.Tags.Any())
             {
-                _context.Tags.RemoveRange(_context.Tags); // Usuwa wszystkie rekordy z tabeli Tags
-                await _context.SaveChangesAsync(); // Zapisuje zmiany w bazie danych
+                _context.Tags.RemoveRange(_context.Tags); 
+                await _context.SaveChangesAsync(); 
             }
 
             int i = 0;
@@ -70,10 +70,7 @@ namespace MediportaZadanieRekrutacyjne.Data
         }
         public async Task<List<TagItem>> GetTagsAsync(int pageNumber, int pageSize, string sortBy, string sortOrder)
         {
-            // Logika pobierania tagów z bazy danych wraz ze stronicowaniem i sortowaniem
-            // Użyj LINQ lub metod zapytań Entity Framework, aby wykonać operacje na bazie danych
-
-            // Przykładowe zapytanie LINQ
+            
             var query = _context.Tags.AsQueryable();
 
             switch (sortBy)
@@ -84,9 +81,9 @@ namespace MediportaZadanieRekrutacyjne.Data
                 case "share":
                     query = sortOrder == "asc" ? query.OrderBy(t => t.Share) : query.OrderByDescending(t => t.Share);
                     break;
-                // Dodaj więcej przypadków sortowania według potrzeb
+               
                 default:
-                    query = query.OrderBy(t => t.Name); // Domyślne sortowanie
+                    query = query.OrderBy(t => t.Name);
                     break;
             }
 
@@ -101,13 +98,17 @@ namespace MediportaZadanieRekrutacyjne.Data
 
 
             List<TagItem> tags = await _context.Tags.ToListAsync();
-            if (tags.Any(a => a.Share <= 0))
+            if (tags.Any(a => a.Share <= 0) && tags.All(a=>a.Count<=0))
             {
-                tags = CountPrecentInPopulation(tags);
+                tags = CountShareInPopulation(tags);
 
 
                 _context.UpdateRange(tags);
                 await _context.SaveChangesAsync();
+            }
+            else if(tags.Any(a => a.Count <= 0))
+            {
+                throw new ArgumentException();
             }
 
 
@@ -125,12 +126,12 @@ namespace MediportaZadanieRekrutacyjne.Data
         }
 
 
-        private List<TagItem> CountPrecentInPopulation(List<TagItem> tags)
+        private List<TagItem> CountShareInPopulation(List<TagItem> tags)
         {
-            // Obliczanie sumy wszystkich wartości Count w tagach
+            
             int total = tags.Sum(tag => tag.Count);
 
-            // Aktualizacja tagów, aby zawierały procentowy udział
+          
             List<TagItem> tags2 = tags.Select(tag =>
             {
                 tag.Share = Math.Round((decimal)tag.Count * 100.0m / (decimal)total, 2);

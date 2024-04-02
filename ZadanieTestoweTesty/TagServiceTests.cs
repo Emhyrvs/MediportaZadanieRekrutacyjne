@@ -2,12 +2,20 @@
 using CoreEx.Abstractions;
 using MediportaZadanieRekrutacyjne.Data;
 using MediportaZadanieRekrutacyjne.Models;
+using MediPortaZadanieTestowe.Controllers;
 using MediPortaZadanieTestowe.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,30 +23,32 @@ namespace ZadanieTestoweTesty
 {
     public class TagServiceTests
     {
+        
+       
         [Fact]
         public async Task CreateTag_ValidTag_AddsTagToDatabase()
         {
-            // Arrange
+
             var options = new DbContextOptionsBuilder<DataDbContext>()
                 .UseInMemoryDatabase(databaseName: "InMemoryDatabase")
                 .Options;
             var mockStackExchangeService = new Mock<IStackExchangeService>();
-           
-            // Create a mock for IMapper
+
+
             var mockMapper = new Mock<IMapper>();
 
-          
-          
+
+
             using (var context = new DataDbContext(options))
             {
 
                 var service = new TagRepo(context, mockStackExchangeService.Object, mockMapper.Object);
                 var tag = new TagItem { Name = "TestTag", Share = 50 };
 
-                // Act
+
                 await service.CreateTag(tag);
 
-                // Assert
+
                 var createdTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "TestTag");
                 Assert.NotNull(createdTag);
                 Assert.Equal("TestTag", createdTag.Name);
@@ -49,18 +59,18 @@ namespace ZadanieTestoweTesty
         [Fact]
         public async Task GetTagsAsync_ReturnsListOfTags()
         {
-            // Arrange
+
             var options = new DbContextOptionsBuilder<DataDbContext>()
                 .UseInMemoryDatabase(databaseName: "InMemoryDatabase")
                 .Options;
             var mockStackExchangeService = new Mock<IStackExchangeService>();
 
-            // Create a mock for IMapper
+
             var mockMapper = new Mock<IMapper>();
 
             using (var context = new DataDbContext(options))
             {
-                var service = new TagRepo(context, mockStackExchangeService.Object,mockMapper.Object);
+                var service = new TagRepo(context, mockStackExchangeService.Object, mockMapper.Object);
                 await context.Tags.AddRangeAsync(new List<TagItem>
             {
                 new TagItem { Name = "Tag1", Share = 20 },
@@ -69,10 +79,10 @@ namespace ZadanieTestoweTesty
             });
                 await context.SaveChangesAsync();
 
-                // Act
+
                 var tags = await service.GetTagsAsync();
 
-                // Assert
+
                 Assert.NotNull(tags);
                 Assert.Equal(3, tags.Count);
                 Assert.Contains(tags, t => t.Name == "Tag1");
@@ -80,6 +90,70 @@ namespace ZadanieTestoweTesty
                 Assert.Contains(tags, t => t.Name == "Tag3");
             }
         }
+        [Fact]
+        public async Task GetTagsFromService_ReturnsListOfTagsFromService()
+        {
+
+            var mockLogger = new Mock<ILogger>();
+
+
+            var mockMapper = new Mock<IMapper>();
+
+
+
+            var service = new StackExchangeService(mockMapper.Object, mockLogger.Object);
+
+            var Tags = await service.GetAllTagsAsync(1, 10);
+            Assert.NotNull(Tags);
+            Assert.Equal(10, Tags.Count);
+
+
+
+
+
+        }
+
+        [Fact]
+        public async Task GetTagsFromDatabase_ShouldReturnTags()
+        {
+            var options = new DbContextOptionsBuilder<DataDbContext>()
+                .UseInMemoryDatabase(databaseName: "InMemoryDatabase2")
+                .Options;
+            var mockStackExchangeService = new Mock<IStackExchangeService>();
+            var mockMapper = new Mock<IMapper>();
+            var mockLogger = new Mock<ILogger>();
+
+            // Arrange
+            using (var context = new DataDbContext(options))
+            {
+                var tags = new List<TagItem>
+        {
+            new TagItem { Id=1, Name = "JavaScript", Count =1000 },
+            new TagItem { Id=2, Name = "C#", Count = 1000 }
+        };
+                context.Tags.AddRange(tags);
+                context.SaveChanges();
+            }
+
+            using (var context = new DataDbContext(options))
+            {
+                var TagsRepo = new TagRepo(context, mockStackExchangeService.Object, mockMapper.Object);
+                var TagController = new TagsController(mockStackExchangeService.Object, TagsRepo, mockLogger.Object);
+
+                // Act
+                var result = await TagController.GetTagsFromDatabase();
+
+                // Assert
+                // Assert
+                var actionResult = Assert.IsType<ActionResult<List<TagItem>>>(result);
+                var okObjectResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+                var tags = Assert.IsAssignableFrom<IEnumerable<TagItem>>(okObjectResult.Value);
+                Assert.Equal(2, tags.Count());
+            }
+        }
+
+
+
 
     }
 }

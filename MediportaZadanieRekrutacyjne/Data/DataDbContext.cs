@@ -18,5 +18,6 @@ namespace MediportaZadanieRekrutacyjne.Data
                 .Property(t => t.Share)
                 .HasColumnType("decimal(18,2)"); // Precyzja i skala dla właściwości "Share"
         }
+        
     }
 }
