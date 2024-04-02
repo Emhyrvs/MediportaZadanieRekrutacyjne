@@ -16,18 +16,20 @@ namespace MediPortaZadanieTestowe.Controllers
 
         private readonly IStackExchangeService _stackExchangeService;
         private readonly ITagRepo _tagRepo;
+        private readonly ILogger _logger;   
 
 
-        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo)
+        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo, ILogger logger)
         {
             _stackExchangeService = stackExchangeService;
            
             _tagRepo = tagRepo;
+            _logger = logger;   
             
         }
       
 
-        [HttpGet] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
+        [HttpGet] 
         public async Task<ActionResult<List<TagItem>>> GetTagsFromDatabase(
            [FromQuery] int pageNumber = 1,
            [FromQuery] int pageSize = 10,
@@ -36,28 +38,29 @@ namespace MediPortaZadanieTestowe.Controllers
         {
 
             await _tagRepo.UpdateCount();
-            // Pobierz listę tagów z bazy danych z uwzględnieniem stronicowania i sortowania
+            
             var tagsFromDatabase = await _tagRepo.GetTagsAsync(pageNumber, pageSize, sortBy, sortOrder);
 
-            // Jeśli nie ma tagów w bazie danych, zwróć 404 Not Found
+           
             if (tagsFromDatabase == null || tagsFromDatabase.Count == 0)
             {
+
+                _logger.LogWarning("Bład nie znaleziono w bazie danych");
                 return NotFound();
             }
 
-            // Jeśli tagi zostały znalezione, zwróć je jako wynik żądania
+            
             return Ok(tagsFromDatabase);
         }
 
-        [HttpGet("DownloadTags")] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
+        [HttpGet("DownloadTags")] 
         public async Task<ActionResult> DoTags()
         {
-            // Pobierz listę tagów z bazy danych
             await _tagRepo.GetTagsFromService();
 
 
 
-            // Jeśli tagi zostały znalezione, zwróć je jako wynik żądania
+          
             return Ok();
         }
 

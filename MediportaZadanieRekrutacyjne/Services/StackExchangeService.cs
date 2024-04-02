@@ -9,12 +9,14 @@ public class StackExchangeService:IStackExchangeService
 {
     private readonly HttpClient _client;
     private readonly IMapper _mapper;
+    private readonly ILogger _logger;   
 
-    public StackExchangeService(IMapper mapper)
+    public StackExchangeService(IMapper mapper, ILogger logger)
     {
         _client = new HttpClient();
         _client.BaseAddress = new Uri("https://api.stackexchange.com");
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<List<TagItem>> GetAllTagsAsync(int page, int pageSize)
@@ -25,37 +27,36 @@ public class StackExchangeService:IStackExchangeService
         {
             string apiUrl = $"https://api.stackexchange.com/2.3/tags?page={page}&pagesize={pageSize}&order=desc&sort=popular&site=stackoverflow";
 
-            // Wykonanie zapytania GET do API Stack Exchange
+           
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
 
-            // Sprawdzenie, czy odpowiedź jest poprawna
+          
             if (response.IsSuccessStatusCode)
             {
-                // Sprawdzenie, czy odpowiedź jest zakodowana w gzip
+               
                 if (response.Content.Headers.ContentEncoding.Contains("gzip"))
                 {
                     using (var gzipStream = new GZipStream(await response.Content.ReadAsStreamAsync(), CompressionMode.Decompress))
                     using (var reader = new StreamReader(gzipStream))
                     {
-                        // Odczytanie zawartości odpowiedzi
+                        
                         string responseBody = await reader.ReadToEndAsync();
 
-                        // Deserializacja odpowiedzi JSON do obiektu TagResponse
+                      
                         TagsDtoRead tags = JsonConvert.DeserializeObject<TagsDtoRead>(responseBody);
 
-                        // Pobranie nazw tagów z obiektu TagResponse
+                       
 
                         return GetTagsFormTagsDto(tags.Items);
 
                     }
                 }
-                else // Jeśli odpowiedź nie jest zakodowana w gzip
+                else 
                 {
-                    // Odczytanie zawartości odpowiedzi
+                    
                     string responseBody = await response.Content.ReadAsStringAsync();
 
-                    // Deserializacja odpowiedzi JSON do obiektu TagResponse
-                   // var tagResponse = JsonConvert.DeserializeObject<TagsDtoRead>(responseBody);
+                   
 
 
 
@@ -63,12 +64,12 @@ public class StackExchangeService:IStackExchangeService
             }
             else
             {
-                Console.WriteLine("Błąd podczas pobierania tagów: " + response.StatusCode);
+                _logger.LogError("Błąd podczas pobierania tagów: " + response.StatusCode);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Błąd: " + ex.Message);
+           _logger.LogError("Błąd: " + ex.Message);
         }
 
         return null;

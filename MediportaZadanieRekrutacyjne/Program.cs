@@ -3,6 +3,7 @@ using MediPortaZadanieTestowe.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PlatformService.Data;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,13 @@ builder.Services.AddScoped<IStackExchangeService, StackExchangeService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<DataDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<ITagRepo, TagRepo>();    
+builder.Services.AddScoped<ITagRepo, TagRepo>();
+Log.Logger = new LoggerConfiguration()
+          .WriteTo.Console()
+          .CreateLogger();
 
+// Rejestrujemy Serilog ILogger jako us?ug? w kontenerze DI
+builder.Services.AddSingleton(Log.Logger);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
