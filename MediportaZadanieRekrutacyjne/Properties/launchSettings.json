@@ -36,6 +36,15 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
-    }
+    },
+    "MediPortaApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "mediporta",
+      "applicationUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
   }
+}
 }

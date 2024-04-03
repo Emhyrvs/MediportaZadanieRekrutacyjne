@@ -16,19 +16,30 @@ namespace PlatformService.Data
 {
     public static class PrepDbcs
     {
-        public static async Task PrepPopulation(IApplicationBuilder app)
+        public static async Task PrepPopulation(IApplicationBuilder app, bool isProduction)
         {
             using (var serviceScope = app.ApplicationServices.CreateScope())
             {
                 var mapper = serviceScope.ServiceProvider.GetRequiredService<IMapper>();
                 var logger = serviceScope.ServiceProvider.GetRequiredService<Serilog.ILogger>();
 
-                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), serviceScope.ServiceProvider.GetRequiredService<ITagRepo>(),mapper,logger);
+                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), serviceScope.ServiceProvider.GetRequiredService<ITagRepo>(),mapper,logger,isProduction);
             }
         }
 
-        private static async Task SeedData(DataDbContext context,ITagRepo tagRepo,IMapper mapper, Serilog.ILogger logger)
+        private static async Task SeedData(DataDbContext context,ITagRepo tagRepo,IMapper mapper, Serilog.ILogger logger, bool isProduction)
         {
+            if(isProduction) { 
+            
+            
+            context.Database.Migrate();
+            
+            }
+            else
+            {
+
+            }
+
 
             if (context.Tags.Count() < 1000)
             {

@@ -1,4 +1,4 @@
-using MediportaZadanieRekrutacyjne.Data;
+﻿using MediportaZadanieRekrutacyjne.Data;
 using MediPortaZadanieTestowe.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +8,17 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder
+                .AllowAnyOrigin()   // Umożliwia żądania z dowolnej domeny
+                .AllowAnyMethod()   // Umożliwia użycie dowolnej metody HTTP (GET, POST, itd.)
+                .AllowAnyHeader();  // Umożliwia użycie dowolnych nagłówków w żądaniach
+        });
+});
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -26,18 +36,12 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddSingleton(Log.Logger);
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
 
+app.UseCors("AllowAllOrigins");
 app.MapControllers();
-await PrepDbcs.PrepPopulation(app);
+await PrepDbcs.PrepPopulation(app,true);
 app.Run();

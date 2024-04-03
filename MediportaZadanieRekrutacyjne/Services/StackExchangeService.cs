@@ -5,13 +5,15 @@ using MediPortaZadanieTestowe.Services;
 using Newtonsoft.Json;
 using System.IO.Compression;
 
+
+
 public class StackExchangeService:IStackExchangeService
 {
     private readonly HttpClient _client;
     private readonly IMapper _mapper;
-    private readonly ILogger _logger;   
+    private readonly Serilog.ILogger _logger;   
 
-    public StackExchangeService(IMapper mapper, ILogger logger)
+    public StackExchangeService(IMapper mapper, Serilog.ILogger logger)
     {
         _client = new HttpClient();
         _client.BaseAddress = new Uri("https://api.stackexchange.com");
@@ -64,12 +66,12 @@ public class StackExchangeService:IStackExchangeService
             }
             else
             {
-                _logger.LogError("Błąd podczas pobierania tagów: " + response.StatusCode);
+                _logger.Error("Błąd podczas pobierania tagów: " + response.StatusCode);
             }
         }
         catch (Exception ex)
         {
-           _logger.LogError("Błąd: " + ex.Message);
+           _logger.Error("Błąd: " + ex.Message);
         }
 
         return null;

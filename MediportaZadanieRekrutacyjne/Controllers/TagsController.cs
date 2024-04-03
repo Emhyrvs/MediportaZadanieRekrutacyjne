@@ -16,10 +16,10 @@ namespace MediPortaZadanieTestowe.Controllers
 
         private readonly IStackExchangeService _stackExchangeService;
         private readonly ITagRepo _tagRepo;
-        private readonly ILogger _logger;   
+        private readonly Serilog.ILogger _logger;   
 
 
-        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo, ILogger logger)
+        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo, Serilog.ILogger logger)
         {
             _stackExchangeService = stackExchangeService;
            
@@ -45,7 +45,7 @@ namespace MediPortaZadanieTestowe.Controllers
             if (tagsFromDatabase == null || tagsFromDatabase.Count == 0)
             {
 
-                _logger.LogWarning("Bład nie znaleziono w bazie danych");
+                _logger.Warning("Bład nie znaleziono w bazie danych");
                 return NotFound();
             }
 
