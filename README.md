@@ -1,0 +1,1 @@
+Aby uruchomić ten projekt wystarczy wejść w project MediportaZadanieRekrutacyjne/MediportaZadanieRekrutacyjne. Otworzyć powershel w tym folderze i urchumić komendę docker-compose up. PO zakończeniu instalacji wystaczy wejść na address http://localhost:8080/index.html aby przetestować metody. 
