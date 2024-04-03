@@ -1,5 +1,9 @@
 version: '3.7'
+networks:
+  dev:
+    driver: bridge  
 services:
+  
   # Serwis SQL Servera
   sql_server:
     # Używamy oficjalnego obrazu SQL Servera z Docker Hub
@@ -14,8 +18,8 @@ services:
     ports:
       - "1433:1433"
     # Nadajemy kontenerowi nazwę "sql_server_container"
-    container_name: sql_server_container   
-
+    container_name: sql_server_container
+      
   # Serwis aplikacji .NET Core
   tagapi:
     image: docker.io/library/mediportazadanierekrutacyjne-tagapi
@@ -28,22 +32,9 @@ services:
       context: .
       dockerfile: Dockerfile
     environment: 
-      - ConnectionStrings__DefaultConnection=Server=sql_server,1433;Database=Tags;User Id=sa;Password=Admin!123;Encrypt=false;
+      - ConnectionString__DefaultConnection=Server=sql_server,1433;Database=Tags;User Id=sa;Password=Admin!123;Encrypt=false
       - ASPNETCORE_URLS=http://+:80
-    volumes:
-      - ./swagger:/app/swagger # Mountowanie folderu z plikiem Swaggera
-      
-  tests:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
-    volumes:
-      - ../ZadanieTestoweTesty:/app
-      - ../MediportaZadanieRekrutacyjne:/MediportaZadanieRekrutacyjne   # Zmieniona ścieżka woluminu
-    working_dir: /app
-    command: ["dotnet", "test"]
-    depends_on:
-      - tagapi
-       
- 
-
-
-
+    networks:
+      - dev
+volumes:
+  app_data:     

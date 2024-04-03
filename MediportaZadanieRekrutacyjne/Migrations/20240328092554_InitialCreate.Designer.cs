@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediportaZadanieRekrutacyjne.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20240327093516_InitialCreate")]
+    [Migration("20240328092554_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -47,6 +47,9 @@ namespace MediportaZadanieRekrutacyjne.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Share")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

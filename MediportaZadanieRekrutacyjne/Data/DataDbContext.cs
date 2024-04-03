@@ -11,5 +11,13 @@ namespace MediportaZadanieRekrutacyjne.Data
         public DataDbContext(DbContextOptions<DataDbContext> options) : base(options) { }
 
         public DbSet<TagItem> Tags { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TagItem>()
+                .Property(t => t.Share)
+                .HasColumnType("decimal(18,2)"); // Precyzja i skala dla właściwości "Share"
+        }
+        
     }
 }

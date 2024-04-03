@@ -1,4 +1,5 @@
-﻿using MediportaZadanieRekrutacyjne.Models;
+﻿using MediportaZadanieRekrutacyjne.Data;
+using MediportaZadanieRekrutacyjne.Models;
 using MediPortaZadanieTestowe.Models;
 using MediPortaZadanieTestowe.Services;
 using Microsoft.AspNetCore.Http;
@@ -14,40 +15,53 @@ namespace MediPortaZadanieTestowe.Controllers
     {
 
         private readonly IStackExchangeService _stackExchangeService;
-        private readonly DbContext _dbContext;
+        private readonly ITagRepo _tagRepo;
+        private readonly Serilog.ILogger _logger;   
 
 
-        public TagsController(IStackExchangeService stackExchangeService,DbContext dbContext)
+        public TagsController(IStackExchangeService stackExchangeService, ITagRepo tagRepo, Serilog.ILogger logger)
         {
             _stackExchangeService = stackExchangeService;
-            _dbContext = dbContext;
+           
+            _tagRepo = tagRepo;
+            _logger = logger;   
+            
         }
-        [HttpGet]
-        public async Task<ActionResult<List<TagItemDto>>> GetTagsFromApi()
+      
+
+        [HttpGet] 
+        public async Task<ActionResult<List<TagItem>>> GetTagsFromDatabase(
+           [FromQuery] int pageNumber = 1,
+           [FromQuery] int pageSize = 10,
+           [FromQuery] string sortBy = "name",
+           [FromQuery] string sortOrder = "asc")
         {
 
-            var Tags = await _stackExchangeService.GetAllTagsAsync();
+            await _tagRepo.UpdateCount();
+            
+            var tagsFromDatabase = await _tagRepo.GetTagsAsync(pageNumber, pageSize, sortBy, sortOrder);
 
-
-
-            return Tags;
-
-        }
-
-        [HttpGet("from-database")] // Dodajmy ścieżkę do odróżnienia od poprzedniej metody
-        public async Task<ActionResult<List<TagItem>>> GetTagsFromDatabase()
-        {
-            // Pobierz listę tagów z bazy danych
-            var tagsFromDatabase = await _dbContext.Set<TagItem>().ToListAsync();
-
-            // Jeśli nie ma tagów w bazie danych, zwróć 404 Not Found
+           
             if (tagsFromDatabase == null || tagsFromDatabase.Count == 0)
             {
+
+                _logger.Warning("Bład nie znaleziono w bazie danych");
                 return NotFound();
             }
 
-            // Jeśli tagi zostały znalezione, zwróć je jako wynik żądania
+            
             return Ok(tagsFromDatabase);
+        }
+
+        [HttpGet("DownloadTags")] 
+        public async Task<ActionResult> DoTags()
+        {
+            await _tagRepo.GetTagsFromService();
+
+
+
+          
+            return Ok();
         }
 
 

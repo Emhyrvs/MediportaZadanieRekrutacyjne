@@ -10,52 +10,46 @@ using MediPortaZadanieTestowe.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace PlatformService.Data
 {
     public static class PrepDbcs
     {
-        public static async Task PrepPopulation(IApplicationBuilder app, bool isProd)
+        public static async Task PrepPopulation(IApplicationBuilder app, bool isProduction)
         {
             using (var serviceScope = app.ApplicationServices.CreateScope())
             {
                 var mapper = serviceScope.ServiceProvider.GetRequiredService<IMapper>();
+                var logger = serviceScope.ServiceProvider.GetRequiredService<Serilog.ILogger>();
 
-                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), isProd, serviceScope.ServiceProvider.GetRequiredService<IStackExchangeService>(),mapper);
+                await SeedData(serviceScope.ServiceProvider.GetRequiredService<DataDbContext>(), serviceScope.ServiceProvider.GetRequiredService<ITagRepo>(),mapper,logger,isProduction);
             }
         }
 
-        private static async Task SeedData(DataDbContext context, bool isProd, IStackExchangeService stackExchangeService,IMapper mapper)
+        private static async Task SeedData(DataDbContext context,ITagRepo tagRepo,IMapper mapper, Serilog.ILogger logger, bool isProduction)
         {
-            if (isProd)
-            {
-                Console.WriteLine("--> Attempting to apply migrations...");
-                try
-                {
-                    await context.Database.MigrateAsync();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"--> Could not run migrations: {ex.Message}");
-                }
-            }
-
-            if (!context.Tags.Any())
-            {
-                Console.WriteLine("--> Seeding Data...");
-                do
-                {
-                    List<TagItemDto> tagsDto = await stackExchangeService.GetAllTagsAsync();
-                    List<TagItem> tags = tagsDto.Select(tagDto => mapper.Map<TagItem>(tagDto)).ToList();
-
-                   
-                    context.Tags.AddRange(tags);
-                    await context.SaveChangesAsync();
-                } while (context.Tags.Count() < 1000);
+            if(isProduction) { 
+            
+            
+            context.Database.Migrate();
+            
             }
             else
             {
-                Console.WriteLine("--> We already have data");
+
+            }
+
+
+            if (context.Tags.Count() < 1000)
+            {
+                logger.Information("Dodano przykładowe dane do bazy danych.");
+                await tagRepo.GetTagsFromService();
+            }
+            else
+            {
+                logger.Warning("Mamy już dane w bazie danych.");
+
             }
         }
     }
